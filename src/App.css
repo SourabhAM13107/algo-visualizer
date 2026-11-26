@@ -1,14 +1,3 @@
-:root {
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --muted: #64748b;
-  --accent: #4f46e5;
-  --accent-dark: #4338ca;
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
-}
-
 .page {
   max-width: 920px;
   margin: 0 auto;
@@ -58,7 +47,7 @@
 .card canvas {
   display: block;
   border-radius: 12px;
-  background: radial-gradient(#e2e8f0 1px, transparent 1px) 0 0 / 18px 18px;
+  background: radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 18px 18px;
 }
 
 select,
@@ -70,7 +59,7 @@ button {
   padding: 0 16px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: #ffffff;
+  background: var(--surface);
   color: var(--text);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
@@ -82,8 +71,8 @@ select {
 }
 
 button:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 
 button:active:not(:disabled) {
@@ -107,9 +96,9 @@ button.primary:hover:not(:disabled) {
 }
 
 button.active {
-  background: var(--text);
-  border-color: var(--text);
-  color: #ffffff;
+  background: var(--active-bg);
+  border-color: var(--active-bg);
+  color: var(--active-text);
 }
 
 .controls {
@@ -178,7 +167,7 @@ button.active {
   gap: 10px;
   padding: 14px 14px 0;
   border-radius: 12px;
-  background: radial-gradient(#e2e8f0 1px, transparent 1px) 0 0 / 18px 18px;
+  background: radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 18px 18px;
 }
 
 .bar-col {
@@ -195,7 +184,7 @@ button.active {
   padding-top: 6px;
   font-size: 15px;
   font-weight: 700;
-  color: var(--text);
+  color: #0f172a;
   border: 1px solid rgba(15, 23, 42, 0.14);
   border-radius: 10px 10px 4px 4px;
   box-shadow: inset 0 -4px 0 rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.08);
@@ -213,7 +202,7 @@ button.active {
 .bars-index {
   margin-top: 8px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--muted);
 }
 
 .bars-marks {
@@ -227,6 +216,23 @@ button.active {
 .bars-index > div,
 .bars-marks > div {
   flex: 1;
+}
+
+.bars.compact .bars-row {
+  gap: 3px;
+  padding: 10px 8px 0;
+}
+
+.bars.compact .bar {
+  padding-top: 0;
+  border-radius: 6px 6px 2px 2px;
+  box-shadow: inset 0 -3px 0 rgba(15, 23, 42, 0.08);
+}
+
+.bars.compact .bars-marks {
+  gap: 3px;
+  padding: 0 8px;
+  font-size: 10px;
 }
 
 /* ---------- quiz ---------- */
@@ -258,15 +264,15 @@ button.active {
 }
 
 .feedback.ok {
-  background: #dcfce7;
-  border: 1px solid #86efac;
-  color: #166534;
+  background: var(--ok-bg);
+  border: 1px solid var(--ok-border);
+  color: var(--ok-text);
 }
 
 .feedback.bad {
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
+  background: var(--bad-bg);
+  border: 1px solid var(--bad-border);
+  color: var(--bad-text);
 }
 
 .score {
@@ -291,7 +297,8 @@ button.active {
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .array-input {
@@ -304,7 +311,7 @@ button.active {
 
 .array-input:focus,
 .target-input:focus {
-  outline: 2px solid #c7d2fe;
+  outline: 2px solid var(--focus);
   border-color: var(--accent);
 }
 
@@ -317,7 +324,7 @@ button.active {
 }
 
 .input-error {
-  color: #991b1b;
+  color: var(--bad-text);
   font-size: 14px;
 }
 
@@ -326,7 +333,7 @@ button.active {
 .code {
   font-family: var(--mono);
   font-size: 13.5px;
-  background: #0b1020;
+  background: var(--code-bg);
   color: #94a3b8;
   border-radius: 12px;
   padding: 14px 0;
@@ -362,13 +369,9 @@ button.active {
 }
 
 .complexity-table th {
-  background: #f1f5f9;
+  background: var(--th-bg);
   color: var(--muted);
   font-weight: 600;
-}
-
-.complexity-table td {
-  font-weight: 500;
 }
 
 .complexity-note {
@@ -378,52 +381,13 @@ button.active {
   line-height: 1.6;
 }
 
-@media (max-width: 600px) {
-  .page {
-    padding: 20px 12px 48px;
-  }
-
-  .header h1 {
-    font-size: 26px;
-  }
-
-  .card {
-    padding: 14px;
-  }
-
-  .array-input {
-    width: 100%;
-  }
-
-  .step-count {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .legend {
-    font-size: 12px;
-  }
-
-  .bars-row,
-  .bars-index,
-  .bars-marks {
-    gap: 6px;
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-
-  .bar {
-    font-size: 13px;
-  }
-}
-
 /* ---------- top navigation ---------- */
 
 .topnav {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(248, 250, 252, 0.85);
+  background: var(--nav-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
@@ -452,6 +416,10 @@ button.active {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+.theme-toggle {
+  margin-left: 8px;
 }
 
 /* ---------- promo banner ---------- */
@@ -506,7 +474,7 @@ button.active {
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--card);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -544,35 +512,20 @@ button.active {
   margin-top: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #166534;
+  color: var(--ok-text);
 }
 
 .race-banner {
   margin-top: 16px;
   padding: 14px 18px;
   border-radius: 12px;
-  border: 1px solid #c7d2fe;
-  background: linear-gradient(90deg, #eef2ff, #dcfce7);
+  border: 1px solid var(--banner-border);
+  background: var(--banner);
   font-size: 17px;
   font-weight: 600;
 }
 
-.bars.compact .bars-row {
-  gap: 3px;
-  padding: 10px 8px 0;
-}
-
-.bars.compact .bar {
-  padding-top: 0;
-  border-radius: 6px 6px 2px 2px;
-  box-shadow: inset 0 -3px 0 rgba(15, 23, 42, 0.08);
-}
-
-.bars.compact .bars-marks {
-  gap: 3px;
-  padding: 0 8px;
-  font-size: 10px;
-}
+/* ---------- phones ---------- */
 
 @media (max-width: 700px) {
   .race-grid {
@@ -581,5 +534,48 @@ button.active {
 
   .brand {
     display: none;
+  }
+
+  .topnav-inner {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 20px 12px 48px;
+  }
+
+  .header h1 {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .array-input {
+    width: 100%;
+  }
+
+  .step-count {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .legend {
+    font-size: 12px;
+  }
+
+  .bars-row,
+  .bars-index,
+  .bars-marks {
+    gap: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .bar {
+    font-size: 13px;
   }
 }

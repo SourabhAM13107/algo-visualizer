@@ -1,9 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import App from "./App.jsx";
 import Race from "./components/Race.jsx";
 
+function initialTheme() {
+  try {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || saved === "light") return saved;
+  } catch (e) {
+    // storage can be blocked, fall through
+  }
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
 export default function Home() {
   const [view, setView] = useState("visualize");
+  const [theme, setTheme] = useState(initialTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch (e) {
+      // ignore
+    }
+  }, [theme]);
 
   return (
     <>
@@ -19,6 +41,13 @@ export default function Home() {
           <button className={view === "race" ? "active" : ""} onClick={() => setView("race")}>
             Algorithm Race
             <span className="badge">NEW</span>
+          </button>
+          <button
+            className="theme-toggle"
+            aria-label="Toggle dark mode"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? "☀ Light" : "☾ Dark"}
           </button>
         </div>
       </div>

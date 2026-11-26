@@ -1,3 +1,66 @@
+:root {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --bg-top: #eef2ff;
+  --card: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #4f46e5;
+  --accent-dark: #4338ca;
+  --active-bg: #0f172a;
+  --active-text: #ffffff;
+  --dots: #e2e8f0;
+  --th-bg: #f1f5f9;
+  --ok-bg: #dcfce7;
+  --ok-border: #86efac;
+  --ok-text: #166534;
+  --bad-bg: #fee2e2;
+  --bad-border: #fca5a5;
+  --bad-text: #991b1b;
+  --nav-bg: rgba(248, 250, 252, 0.85);
+  --banner: linear-gradient(90deg, #eef2ff, #dcfce7);
+  --banner-border: #c7d2fe;
+  --focus: #c7d2fe;
+  --code-bg: #0b1020;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --bg-top: #161b3a;
+  --card: #131a2e;
+  --surface: #1a2238;
+  --surface-hover: #232d4a;
+  --border: #263152;
+  --border-strong: #34416b;
+  --text: #e5e9f5;
+  --muted: #94a3c0;
+  --accent: #6366f1;
+  --accent-dark: #7c83ff;
+  --active-bg: #e5e9f5;
+  --active-text: #0b1020;
+  --dots: #1c2540;
+  --th-bg: #1a2238;
+  --ok-bg: #12351f;
+  --ok-border: #1f6b3a;
+  --ok-text: #86efac;
+  --bad-bg: #3b1519;
+  --bad-border: #7f2a31;
+  --bad-text: #fca5a5;
+  --nav-bg: rgba(11, 16, 32, 0.85);
+  --banner: linear-gradient(90deg, #1c2250, #123524);
+  --banner-border: #34416b;
+  --focus: #3b4380;
+  --code-bg: #070b16;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -5,8 +68,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f8fafc linear-gradient(180deg, #eef2ff 0, #f8fafc 360px) no-repeat;
-  color: #0f172a;
+  background: var(--bg) linear-gradient(180deg, var(--bg-top) 0, var(--bg) 360px) no-repeat;
+  color: var(--text);
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
