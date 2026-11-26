@@ -6,6 +6,7 @@ import GraphCanvas from "./components/GraphCanvas";
 import ArrayBars from "./components/ArrayBars";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
+import "./App.css";
 
 const sampleArray = [5, 2, 8, 1, 9, 3];
 
@@ -29,6 +30,21 @@ const ALGORITHMS = {
   },
 };
 
+const LEGENDS = {
+  graph: [
+    ["#cbd5e1", "Not discovered"],
+    ["#fde047", "Waiting in queue/stack"],
+    ["#fb923c", "Processing now"],
+    ["#4ade80", "Done"],
+  ],
+  array: [
+    ["#cbd5e1", "Unsorted"],
+    ["#fde047", "Comparing"],
+    ["#fb923c", "Swapped"],
+    ["#4ade80", "In final place"],
+  ],
+};
+
 export default function App() {
   const [algo, setAlgo] = useState("BFS");
   const config = ALGORITHMS[algo];
@@ -44,9 +60,7 @@ export default function App() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [feedback, setFeedback] = useState(null);
 
-  // graph quiz: the next node that will be processed
   const nextVisitIndex = steps.findIndex((s, i) => i > index && s.type === "visit");
-  // sorting quiz: the next comparison (or the end)
   const nextCompareIndex = steps.findIndex(
     (s, i) => i > index && (s.type === "compare" || s.type === "done")
   );
@@ -96,7 +110,7 @@ export default function App() {
 
   function startPredict() {
     resetQuiz();
-    if (isArray) next(); // move from the "start" step to the first comparison
+    if (isArray) next();
     setMode("predict");
   }
 
@@ -106,87 +120,124 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
-      <h2>Algorithm Visualizer</h2>
+    <div className="page">
+      <div className="header">
+        <h1>Algorithm Visualizer</h1>
+        <p>Watch an algorithm run step by step, or test yourself by predicting its next move.</p>
+      </div>
 
-      <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="toolbar">
         <select value={algo} onChange={(e) => changeAlgo(e.target.value)}>
           {Object.entries(ALGORITHMS).map(([key, a]) => (
             <option key={key} value={key}>{a.label}</option>
           ))}
         </select>
-        <button onClick={startWatch} disabled={mode === "watch"}>Watch</button>
-        <button onClick={startPredict} disabled={mode === "predict"}>Predict the Next Step</button>
+        <button className={mode === "watch" ? "active" : ""} onClick={startWatch}>
+          Watch
+        </button>
+        <button className={mode === "predict" ? "active" : ""} onClick={startPredict}>
+          Predict the Next Step
+        </button>
       </div>
 
-      {isArray ? (
-        <ArrayBars step={step} />
-      ) : (
-        <GraphCanvas
-          graph={sampleGraph}
-          step={step}
-          onNodeClick={mode === "predict" ? handleNodeGuess : undefined}
-        />
-      )}
+      <div className="card">
+        {isArray ? (
+          <ArrayBars step={step} />
+        ) : (
+          <GraphCanvas
+            graph={sampleGraph}
+            step={step}
+            onNodeClick={mode === "predict" ? handleNodeGuess : undefined}
+          />
+        )}
 
-      {mode === "watch" && (
-        <div style={{ margin: "12px 0", display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={prev} disabled={index === 0}>Prev</button>
-          <button onClick={toggle}>{playing ? "Pause" : "Play"}</button>
-          <button onClick={next} disabled={index === steps.length - 1}>Next</button>
-          <button onClick={reset}>Reset</button>
-          <label style={{ marginLeft: 16 }}>
-            Speed{" "}
-            <input type="range" min="1" max="10" value={speed}
-              onChange={(e) => setSpeed(Number(e.target.value))} />
-          </label>
-          <span style={{ marginLeft: 16 }}>Step {index + 1} / {steps.length}</span>
+        <div className="legend">
+          {LEGENDS[config.kind].map(([color, text]) => (
+            <span key={text}>
+              <i className="dot" style={{ background: color }} />
+              {text}
+            </span>
+          ))}
         </div>
-      )}
+
+        {mode === "watch" && (
+          <div className="controls">
+            <button onClick={prev} disabled={index === 0}>Prev</button>
+            <button className="primary" onClick={toggle}>{playing ? "Pause" : "Play"}</button>
+            <button onClick={next} disabled={index === steps.length - 1}>Next</button>
+            <button onClick={reset}>Reset</button>
+            <label>
+              Speed
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+              />
+            </label>
+            <span className="step-count">Step {index + 1} / {steps.length}</span>
+          </div>
+        )}
+      </div>
 
       {mode === "predict" && (
-        <div style={{ margin: "12px 0" }}>
-          {question && !isArray && <p><b>Click the node {algo} will process next.</b></p>}
+        <div className="card">
+          <h3>Quiz</h3>
+
+          {question && !isArray && (
+            <p className="quiz-question">Click the node {algo} will process next.</p>
+          )}
 
           {question && isArray && (
-            <p>
-              <b>Bars at positions {step.i} and {step.j} are being compared. Will they be swapped?</b>{" "}
-              <button onClick={() => handleSortGuess(true)}>Swap</button>{" "}
-              <button onClick={() => handleSortGuess(false)}>Don't swap</button>
-            </p>
+            <>
+              <p className="quiz-question">
+                Bars at positions {step.i} and {step.j} are being compared. Will they be swapped?
+              </p>
+              <div className="quiz-actions">
+                <button className="primary" onClick={() => handleSortGuess(true)}>Swap</button>
+                <button onClick={() => handleSortGuess(false)}>Don't swap</button>
+              </div>
+            </>
           )}
 
           {feedback && (
-            <p style={{ color: feedback.ok ? "green" : "crimson" }}>
-              {feedback.ok ? "Correct!" : "Not quite."}{" "}
+            <div className={`feedback ${feedback.ok ? "ok" : "bad"}`}>
+              {feedback.ok ? "Correct! " : "Not quite. "}
               {isArray
                 ? feedback.answer
-                  ? "They get swapped because the left bar is bigger."
-                  : "They stay, because they are already in order."
-                : !feedback.ok && `The answer was node ${feedback.answer}.`}{" "}
+                  ? "They get swapped because the left bar is bigger. "
+                  : "They stay, because they are already in order. "
+                : !feedback.ok && `The answer was node ${feedback.answer}. `}
               <button onClick={continueAfterFeedback}>Continue</button>
-            </p>
+            </div>
           )}
 
           {!question && !feedback && (
-            <p><b>Finished!</b> Final score: {score.correct} / {score.total}</p>
+            <p className="quiz-question">Finished! Final score: {score.correct} / {score.total}</p>
           )}
 
-          <p>Score: {score.correct} / {score.total}</p>
+          <p className="score">Score: {score.correct} / {score.total}</p>
         </div>
       )}
 
-      {isArray ? (
-        <>
-          <p><b>Action:</b> {step.type}{step.i >= 0 ? ` (positions ${step.i} and ${step.j})` : ""}</p>
-          <p><b>Array:</b> [{step.array.join(", ")}]</p>
-        </>
-      ) : (
-        <>
-          <p><b>{config.structure}:</b> [{step.queue.join(", ")}]</p>
-          <p><b>Visited:</b> [{step.visited.join(", ")}]</p>
-        </>
-      )}
+      <div className="card">
+        <h3>Current state</h3>
+        {isArray ? (
+          <>
+            <p className="state-row">
+              Action: {step.type}
+              {step.i >= 0 ? ` (positions ${step.i} and ${step.j})` : ""}
+            </p>
+            <p className="state-row">Array: [{step.array.join(", ")}]</p>
+          </>
+        ) : (
+          <>
+            <p className="state-row">{config.structure}: [{step.queue.join(", ")}]</p>
+            <p className="state-row">Visited: [{step.visited.join(", ")}]</p>
+          </>
+        )}
+      </div>
     </div>
   );
 }
