@@ -4,9 +4,11 @@ import { recordDFS } from "./algorithms/dfs";
 import { recordBubbleSort } from "./algorithms/bubbleSort";
 import { recordInsertionSort } from "./algorithms/insertionSort";
 import { recordBinarySearch } from "./algorithms/binarySearch";
+import { recordMergeSort } from "./algorithms/mergeSort";
 import GraphCanvas from "./components/GraphCanvas";
 import ArrayBars from "./components/ArrayBars";
 import SearchBars from "./components/SearchBars";
+import MergeBars from "./components/MergeBars";
 import Pseudocode from "./components/Pseudocode";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
@@ -37,6 +39,11 @@ const ALGORITHMS = {
     kind: "array",
     run: (arr) => recordInsertionSort(arr),
   },
+  MERGE: {
+    label: "Merge Sort",
+    kind: "merge",
+    run: (arr) => recordMergeSort(arr),
+  },
   BINARY: {
     label: "Binary Search",
     kind: "search",
@@ -64,6 +71,14 @@ const LEGENDS = {
     ["#fb923c", "Middle was not the target"],
     ["#4ade80", "Found"],
   ],
+  merge: [
+    ["#bfdbfe", "Left half"],
+    ["#e9d5ff", "Right half"],
+    ["#fde047", "Comparing the two heads"],
+    ["#fb923c", "Just moved to output"],
+    ["#bbf7d0", "Merged so far"],
+    ["#4ade80", "Sorted block"],
+  ],
 };
 
 function explainSearch(answer) {
@@ -71,6 +86,12 @@ function explainSearch(answer) {
   if (answer === "go-right")
     return "The middle value is smaller than the target, so the target must be in the right half. ";
   return "The middle value is bigger than the target, so the target must be in the left half. ";
+}
+
+function explainMerge(answer) {
+  return answer === "left"
+    ? "The left value is smaller or equal, so it goes to the output first. "
+    : "The right value is smaller, so it goes to the output first. ";
 }
 
 export default function App() {
@@ -82,9 +103,11 @@ export default function App() {
   const [targetText, setTargetText] = useState("9");
 
   const config = ALGORITHMS[algo];
-  const isArray = config.kind === "array";
-  const isSearch = config.kind === "search";
-  const hasInput = isArray || isSearch;
+  const kind = config.kind;
+  const isArray = kind === "array";
+  const isSearch = kind === "search";
+  const isMerge = kind === "merge";
+  const hasInput = kind !== "graph";
   const steps = useMemo(() => config.run(customArray, target), [algo, customArray, target]);
 
   const [speed, setSpeed] = useState(5);
@@ -107,7 +130,7 @@ export default function App() {
   let question = false;
   if (mode === "predict" && !feedback) {
     if (isSearch) question = step.type === "check";
-    else if (isArray) question = step.type === "compare";
+    else if (isArray || isMerge) question = step.type === "compare";
     else question = nextVisitIndex !== -1;
   }
 
@@ -134,14 +157,20 @@ export default function App() {
     record(guess === answer, answer);
   }
 
-  function jumpTo(target) {
-    for (let k = index; k < target; k++) next();
+  function handleMergeGuess(guess) {
+    if (!question) return;
+    const answer = steps[index + 1].side; // "left" or "right"
+    record(guess === answer, answer);
+  }
+
+  function jumpTo(targetIndex) {
+    for (let k = index; k < targetIndex; k++) next();
   }
 
   function continueAfterFeedback() {
     setFeedback(null);
     if (isSearch) jumpTo(nextCheckIndex);
-    else if (isArray) jumpTo(nextCompareIndex);
+    else if (isArray || isMerge) jumpTo(nextCompareIndex);
     else jumpTo(nextVisitIndex);
   }
 
@@ -159,7 +188,12 @@ export default function App() {
 
   function startPredict() {
     resetQuiz();
-    if (hasInput) next(); // move from the "start" step to the first question
+    if (isArray || isSearch) next(); // these start with a "start" step followed by the first question
+    if (isMerge) {
+      // jump to the first comparison
+      const first = steps.findIndex((s) => s.type === "compare");
+      for (let k = 0; k < first; k++) next();
+    }
     setMode("predict");
   }
 
@@ -259,6 +293,8 @@ export default function App() {
       <div className="card">
         {isSearch ? (
           <SearchBars step={step} />
+        ) : isMerge ? (
+          <MergeBars step={step} />
         ) : isArray ? (
           <ArrayBars step={step} />
         ) : (
@@ -270,7 +306,7 @@ export default function App() {
         )}
 
         <div className="legend">
-          {LEGENDS[config.kind].map(([color, text]) => (
+          {LEGENDS[kind].map(([color, text]) => (
             <span key={text}>
               <i className="dot" style={{ background: color }} />
               {text}
@@ -303,7 +339,7 @@ export default function App() {
         <div className="card">
           <h3>Quiz</h3>
 
-          {question && !isArray && !isSearch && (
+          {question && kind === "graph" && (
             <p className="quiz-question">Click the node {algo} will process next.</p>
           )}
 
@@ -332,11 +368,26 @@ export default function App() {
             </>
           )}
 
+          {question && isMerge && (
+            <>
+              <p className="quiz-question">
+                Left head is {step.array[step.i]} and right head is {step.array[step.j]}. Which one goes
+                into the merged output next?
+              </p>
+              <div className="quiz-actions">
+                <button className="primary" onClick={() => handleMergeGuess("left")}>Left ({step.array[step.i]})</button>
+                <button className="primary" onClick={() => handleMergeGuess("right")}>Right ({step.array[step.j]})</button>
+              </div>
+            </>
+          )}
+
           {feedback && (
             <div className={`feedback ${feedback.ok ? "ok" : "bad"}`}>
               {feedback.ok ? "Correct! " : "Not quite. "}
               {isSearch
                 ? explainSearch(feedback.answer)
+                : isMerge
+                ? explainMerge(feedback.answer)
                 : isArray
                 ? feedback.answer
                   ? "They get swapped because the left bar is bigger. "
@@ -370,6 +421,14 @@ export default function App() {
               Middle: {step.mid >= 0 ? `position ${step.mid} (value ${step.array[step.mid]})` : "-"}
             </p>
             <p className="state-row">Sorted array: [{step.array.join(", ")}]</p>
+          </>
+        ) : isMerge ? (
+          <>
+            <p className="state-row">Action: {step.type}</p>
+            <p className="state-row">
+              Working on: {step.lo >= 0 ? `positions ${step.lo} to ${step.hi}` : "-"}
+            </p>
+            <p className="state-row">Array: [{step.array.join(", ")}]</p>
           </>
         ) : isArray ? (
           <>

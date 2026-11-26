@@ -74,5 +74,31 @@ export const PSEUDOCODE = {
       notfound: [7],
     },
   },
+
+    MERGE: {
+    lines: [
+      "mergeSort(arr, lo, hi):",
+      "  if lo >= hi: return",
+      "  mid = floor((lo + hi) / 2)",
+      "  mergeSort(arr, lo, mid)",
+      "  mergeSort(arr, mid + 1, hi)",
+      "  merge(arr, lo, mid, hi)",
+      "",
+      "merge(arr, lo, mid, hi):",
+      "  while both halves still have elements:",
+      "    compare the left head and the right head",
+      "    move the smaller one to the output",
+      "  copy the leftovers of the other half",
+    ],
+    highlight: {
+      start: [0],
+      split: [1, 2, 3, 4],
+      compare: [8, 9],
+      place: [10],
+      copy: [11],
+      merged: [5],
+      done: [5],
+    },
+  },
 };
 
