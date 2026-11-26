@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 
 const COLORS = {
-  idle: "#cbd5e1",    // not discovered yet
-  queued: "#fde047",  // discovered, waiting in queue
-  current: "#fb923c", // being processed right now
-  done: "#4ade80",    // fully processed
+  idle: "#cbd5e1",
+  queued: "#fde047",
+  current: "#fb923c",
+  done: "#4ade80",
 };
 
 function currentNode(step) {
   if (step.type === "enqueue") return step.from;
-  return step.node; // "start" and "visit"
+  return step.node;
 }
 
 function colorOf(id, step) {
@@ -26,7 +26,6 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, width, height);
 
-    // 1. edges
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#94a3b8";
     for (const [a, list] of Object.entries(graph.adj)) {
@@ -42,7 +41,6 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
       }
     }
 
-    // 2. highlight the edge being used when a node is enqueued
     if (step.type === "enqueue") {
       const p = graph.nodes[step.from];
       const q = graph.nodes[step.node];
@@ -54,7 +52,6 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
       ctx.stroke();
     }
 
-    // 3. nodes
     for (const n of graph.nodes) {
       ctx.beginPath();
       ctx.arc(n.x, n.y, 22, 0, Math.PI * 2);
@@ -72,7 +69,7 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
     }
   }, [graph, step, width, height]);
 
-    function handleClick(e) {
+  function handleClick(e) {
     if (!onNodeClick) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -94,6 +91,4 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
       style={{ cursor: onNodeClick ? "pointer" : "default" }}
     />
   );
-
-  // return <canvas ref={canvasRef} width={width} height={height} />;
 }
