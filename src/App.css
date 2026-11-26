@@ -177,3 +177,16 @@ button.active {
   color: #ffffff;
   border-left-color: #fde047;
 }
+
+.array-input {
+  font: inherit;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  width: 260px;
+}
+
+.input-error {
+  color: #991b1b;
+  font-size: 14px;
+}

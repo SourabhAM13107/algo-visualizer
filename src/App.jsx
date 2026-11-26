@@ -4,10 +4,10 @@ import { recordDFS } from "./algorithms/dfs";
 import { recordBubbleSort } from "./algorithms/bubbleSort";
 import GraphCanvas from "./components/GraphCanvas";
 import ArrayBars from "./components/ArrayBars";
+import Pseudocode from "./components/Pseudocode";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
 import "./App.css";
-import Pseudocode from "./components/Pseudocode";
 
 const sampleArray = [5, 2, 8, 1, 9, 3];
 
@@ -27,7 +27,7 @@ const ALGORITHMS = {
   BUBBLE: {
     label: "Bubble Sort",
     kind: "array",
-    run: () => recordBubbleSort(sampleArray),
+    run: (arr) => recordBubbleSort(arr),
   },
 };
 
@@ -48,9 +48,13 @@ const LEGENDS = {
 
 export default function App() {
   const [algo, setAlgo] = useState("BFS");
+  const [customArray, setCustomArray] = useState(sampleArray);
+  const [inputText, setInputText] = useState(sampleArray.join(", "));
+  const [inputError, setInputError] = useState("");
+
   const config = ALGORITHMS[algo];
   const isArray = config.kind === "array";
-  const steps = useMemo(() => config.run(), [algo]);
+  const steps = useMemo(() => config.run(customArray), [algo, customArray]);
 
   const [speed, setSpeed] = useState(5);
   const delay = 1700 - speed * 150;
@@ -120,6 +124,32 @@ export default function App() {
     setMode("watch");
   }
 
+  function loadArray(nums) {
+    setCustomArray(nums);
+    setInputText(nums.join(", "));
+    setInputError("");
+    resetQuiz();
+    setMode("watch");
+  }
+
+  function applyArray() {
+    const parts = inputText.split(",").map((t) => t.trim()).filter((t) => t !== "");
+    const nums = parts.map(Number);
+    const bad =
+      nums.length < 2 ||
+      nums.length > 12 ||
+      nums.some((n) => !Number.isInteger(n) || n < 1 || n > 99);
+    if (bad) {
+      setInputError("Enter 2 to 12 whole numbers between 1 and 99, separated by commas.");
+      return;
+    }
+    loadArray(nums);
+  }
+
+  function randomArray() {
+    loadArray(Array.from({ length: 8 }, () => 1 + Math.floor(Math.random() * 30)));
+  }
+
   return (
     <div className="page">
       <div className="header">
@@ -140,6 +170,21 @@ export default function App() {
           Predict the Next Step
         </button>
       </div>
+
+      {isArray && (
+        <div className="toolbar">
+          <input
+            className="array-input"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && applyArray()}
+            placeholder="e.g. 5, 2, 8, 1, 9"
+          />
+          <button onClick={applyArray}>Apply array</button>
+          <button onClick={randomArray}>Random</button>
+          {inputError && <span className="input-error">{inputError}</span>}
+        </div>
+      )}
 
       <div className="card">
         {isArray ? (
@@ -222,7 +267,8 @@ export default function App() {
         </div>
       )}
 
-            <Pseudocode algo={algo} step={step} />
+      <Pseudocode algo={algo} step={step} />
+
       <div className="card">
         <h3>Current state</h3>
         {isArray ? (
