@@ -7,6 +7,7 @@ import ArrayBars from "./components/ArrayBars";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
 import "./App.css";
+import Pseudocode from "./components/Pseudocode";
 
 const sampleArray = [5, 2, 8, 1, 9, 3];
 
@@ -221,6 +222,7 @@ export default function App() {
         </div>
       )}
 
+            <Pseudocode algo={algo} step={step} />
       <div className="card">
         <h3>Current state</h3>
         {isArray ? (

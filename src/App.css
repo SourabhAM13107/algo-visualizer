@@ -156,3 +156,24 @@ button.active {
   margin: 4px 0;
   font-family: ui-monospace, Menlo, monospace;
 }
+
+.code {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 14px;
+  background: #0f172a;
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 0;
+}
+
+.code-line {
+  white-space: pre;
+  padding: 3px 16px;
+  border-left: 4px solid transparent;
+}
+
+.code-line.active {
+  background: #1e3a8a;
+  color: #ffffff;
+  border-left-color: #fde047;
+}
