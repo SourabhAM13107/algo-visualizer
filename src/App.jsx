@@ -1,24 +1,28 @@
 import { useMemo, useState } from "react";
 import { recordBFS } from "./algorithms/bfs";
+import { recordDFS } from "./algorithms/dfs";
 import GraphCanvas from "./components/GraphCanvas";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
 
+const ALGORITHMS = {
+  BFS: { label: "BFS (Breadth-First Search)", record: recordBFS, structure: "Queue" },
+  DFS: { label: "DFS (Depth-First Search)", record: recordDFS, structure: "Stack" },
+};
+
 export default function App() {
-  const steps = useMemo(() => recordBFS(sampleGraph.adj, 0), []);
+  const [algo, setAlgo] = useState("BFS");
+  const steps = useMemo(() => ALGORITHMS[algo].record(sampleGraph.adj, 0), [algo]);
+
   const [speed, setSpeed] = useState(5);
   const delay = 1700 - speed * 150;
   const { index, playing, next, prev, reset, toggle } = usePlayer(steps.length, delay);
   const step = steps[index];
 
-  // quiz state
-  const [mode, setMode] = useState("watch"); // "watch" or "predict"
+  const [mode, setMode] = useState("watch");
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [feedback, setFeedback] = useState(null); // { ok: true/false, answer }
+  const [feedback, setFeedback] = useState(null);
 
-  // A question exists at every "visit" step's predecessor: the next "visit" step.
-  // We ask "who gets processed next?" while sitting on any step that is followed
-  // by a visit somewhere later.
   const nextVisitIndex = steps.findIndex((s, i) => i > index && s.type === "visit");
   const question = mode === "predict" && nextVisitIndex !== -1 && !feedback;
 
@@ -30,35 +34,47 @@ export default function App() {
     setFeedback({ ok, answer });
   }
 
-  function continueAfterFeedback() {
-    setFeedback(null);
-    setIndex_(nextVisitIndex);
-  }
-
-  // jump helper: step forward until we reach a given index
-  function setIndex_(target) {
+  function jumpTo(target) {
     for (let k = index; k < target; k++) next();
   }
 
-  function startPredict() {
+  function continueAfterFeedback() {
+    setFeedback(null);
+    jumpTo(nextVisitIndex);
+  }
+
+  function resetQuiz() {
     reset();
     setScore({ correct: 0, total: 0 });
     setFeedback(null);
+  }
+
+  function changeAlgo(value) {
+    setAlgo(value);
+    resetQuiz();
+  }
+
+  function startPredict() {
+    resetQuiz();
     setMode("predict");
   }
 
   function startWatch() {
-    reset();
-    setFeedback(null);
+    resetQuiz();
     setMode("watch");
   }
 
   return (
     <div style={{ padding: 24, fontFamily: "sans-serif" }}>
-      <h2>BFS Visualizer</h2>
+      <h2>Algorithm Visualizer</h2>
 
-      <div style={{ marginBottom: 12 }}>
-        <button onClick={startWatch} disabled={mode === "watch"}>Watch</button>{" "}
+      <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
+        <select value={algo} onChange={(e) => changeAlgo(e.target.value)}>
+          {Object.entries(ALGORITHMS).map(([key, a]) => (
+            <option key={key} value={key}>{a.label}</option>
+          ))}
+        </select>
+        <button onClick={startWatch} disabled={mode === "watch"}>Watch</button>
         <button onClick={startPredict} disabled={mode === "predict"}>Predict the Next Step</button>
       </div>
 
@@ -85,7 +101,7 @@ export default function App() {
 
       {mode === "predict" && (
         <div style={{ margin: "12px 0" }}>
-          {question && <p><b>Click the node BFS will process next.</b></p>}
+          {question && <p><b>Click the node {algo} will process next.</b></p>}
 
           {feedback && (
             <p style={{ color: feedback.ok ? "green" : "crimson" }}>
@@ -95,15 +111,15 @@ export default function App() {
           )}
 
           {!question && !feedback && (
-            <p><b>Finished!</b> Score: {score.correct} / {score.total}</p>
+            <p><b>Finished!</b> Final score: {score.correct} / {score.total}</p>
           )}
 
           <p>Score: {score.correct} / {score.total}</p>
         </div>
       )}
 
-      <p><b>Queue:</b> [{step.queue.join(", ")}]</p>
-      <p><b>Discovered:</b> [{step.visited.join(", ")}]</p>
+      <p><b>{ALGORITHMS[algo].structure}:</b> [{step.queue.join(", ")}]</p>
+      <p><b>Visited:</b> [{step.visited.join(", ")}]</p>
     </div>
   );
 }
