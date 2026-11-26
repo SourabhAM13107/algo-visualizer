@@ -122,5 +122,26 @@ export const PSEUDOCODE = {
       done: [9],
     },
   },
+    QUICK: {
+    lines: [
+      "quickSort(arr, lo, hi):",
+      "  if lo >= hi: return",
+      "  pivot = arr[hi]; i = lo - 1",
+      "  for j = lo to hi - 1:",
+      "    if arr[j] <= pivot:",
+      "      i = i + 1; swap arr[i], arr[j]",
+      "  swap arr[i + 1], arr[hi]   // pivot goes to its final place",
+      "  quickSort(arr, lo, i)",
+      "  quickSort(arr, i + 2, hi)",
+    ],
+    highlight: {
+      start: [0],
+      pivot: [1, 2],
+      compare: [3, 4],
+      swap: [5],
+      place: [6, 7, 8],
+      done: [0],
+    },
+  },
 };
 

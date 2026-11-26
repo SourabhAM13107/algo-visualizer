@@ -5,12 +5,14 @@ import { recordBubbleSort } from "./algorithms/bubbleSort";
 import { recordInsertionSort } from "./algorithms/insertionSort";
 import { recordBinarySearch } from "./algorithms/binarySearch";
 import { recordMergeSort } from "./algorithms/mergeSort";
+import { recordQuickSort } from "./algorithms/quickSort";
 import { recordDijkstra } from "./algorithms/dijkstra";
 import GraphCanvas from "./components/GraphCanvas";
 import WeightedGraphCanvas from "./components/WeightedGraphCanvas";
 import ArrayBars from "./components/ArrayBars";
 import SearchBars from "./components/SearchBars";
 import MergeBars from "./components/MergeBars";
+import QuickBars from "./components/QuickBars";
 import Pseudocode from "./components/Pseudocode";
 import Complexity from "./components/Complexity";
 import { sampleGraph } from "./data/sampleGraphs";
@@ -53,6 +55,11 @@ const ALGORITHMS = {
     kind: "merge",
     run: (arr) => recordMergeSort(arr),
   },
+  QUICK: {
+    label: "Quick Sort",
+    kind: "quick",
+    run: (arr) => recordQuickSort(arr),
+  },
   BINARY: {
     label: "Binary Search",
     kind: "search",
@@ -94,6 +101,15 @@ const LEGENDS = {
     ["#bbf7d0", "Merged so far"],
     ["#4ade80", "Sorted block"],
   ],
+  quick: [
+    ["#a78bfa", "Pivot (P)"],
+    ["#bfdbfe", "≤ pivot zone (up to i)"],
+    ["#fecaca", "> pivot zone"],
+    ["#e5e7eb", "Not scanned yet"],
+    ["#fde047", "Scanning (j)"],
+    ["#fb923c", "Just moved"],
+    ["#4ade80", "Final position"],
+  ],
 };
 
 const fmt = (d) => (d === Infinity ? "∞" : d);
@@ -111,6 +127,14 @@ function explainMerge(answer) {
     : "The right value is smaller, so it goes to the output first. ";
 }
 
+function explainQuick(answer, step) {
+  const v = step.array[step.j];
+  const p = step.array[step.hi];
+  return answer
+    ? `${v} is less than or equal to the pivot ${p}, so it joins the left zone. `
+    : `${v} is bigger than the pivot ${p}, so it stays on the right side. `;
+}
+
 export default function App() {
   const [algo, setAlgo] = useState("BFS");
   const [customArray, setCustomArray] = useState(sampleArray);
@@ -124,8 +148,9 @@ export default function App() {
   const isArray = kind === "array";
   const isSearch = kind === "search";
   const isMerge = kind === "merge";
+  const isQuick = kind === "quick";
   const isWeighted = kind === "wgraph";
-  const hasInput = isArray || isSearch || isMerge;
+  const hasInput = isArray || isSearch || isMerge || isQuick;
   const steps = useMemo(() => config.run(customArray, target), [algo, customArray, target]);
 
   const [speed, setSpeed] = useState(5);
@@ -148,7 +173,7 @@ export default function App() {
   let question = false;
   if (mode === "predict" && !feedback) {
     if (isSearch) question = step.type === "check";
-    else if (isArray || isMerge) question = step.type === "compare";
+    else if (isArray || isMerge || isQuick) question = step.type === "compare";
     else question = nextVisitIndex !== -1; // BFS, DFS, Dijkstra
   }
 
@@ -181,6 +206,12 @@ export default function App() {
     record(guess === answer, answer);
   }
 
+  function handleQuickGuess(guessMove) {
+    if (!question) return;
+    const moves = steps[index + 1].type === "swap"; // element joins the <= pivot zone
+    record(guessMove === moves, moves);
+  }
+
   function jumpTo(targetIndex) {
     for (let k = index; k < targetIndex; k++) next();
   }
@@ -188,7 +219,7 @@ export default function App() {
   function continueAfterFeedback() {
     setFeedback(null);
     if (isSearch) jumpTo(nextCheckIndex);
-    else if (isArray || isMerge) jumpTo(nextCompareIndex);
+    else if (isArray || isMerge || isQuick) jumpTo(nextCompareIndex);
     else jumpTo(nextVisitIndex);
   }
 
@@ -207,7 +238,7 @@ export default function App() {
   function startPredict() {
     resetQuiz();
     if (isArray || isSearch) next(); // these start with a "start" step followed by the first question
-    if (isMerge) {
+    if (isMerge || isQuick) {
       const first = steps.findIndex((s) => s.type === "compare");
       for (let k = 0; k < first; k++) next();
     }
@@ -312,6 +343,8 @@ export default function App() {
           <SearchBars step={step} />
         ) : isMerge ? (
           <MergeBars step={step} />
+        ) : isQuick ? (
+          <QuickBars step={step} />
         ) : isArray ? (
           <ArrayBars step={step} />
         ) : isWeighted ? (
@@ -410,6 +443,19 @@ export default function App() {
             </>
           )}
 
+          {question && isQuick && (
+            <>
+              <p className="quiz-question">
+                The pivot is {step.array[step.hi]} and the scanned value is {step.array[step.j]}. Does it
+                move into the left (≤ pivot) zone?
+              </p>
+              <div className="quiz-actions">
+                <button className="primary" onClick={() => handleQuickGuess(true)}>Yes, ≤ pivot</button>
+                <button onClick={() => handleQuickGuess(false)}>No, &gt; pivot</button>
+              </div>
+            </>
+          )}
+
           {feedback && (
             <div className={`feedback ${feedback.ok ? "ok" : "bad"}`}>
               {feedback.ok ? "Correct! " : "Not quite. "}
@@ -417,6 +463,8 @@ export default function App() {
                 ? explainSearch(feedback.answer)
                 : isMerge
                 ? explainMerge(feedback.answer)
+                : isQuick
+                ? explainQuick(feedback.answer, step)
                 : isArray
                 ? feedback.answer
                   ? "They get swapped because the left bar is bigger. "
@@ -473,6 +521,15 @@ export default function App() {
             <p className="state-row">Action: {step.type}</p>
             <p className="state-row">
               Working on: {step.lo >= 0 ? `positions ${step.lo} to ${step.hi}` : "-"}
+            </p>
+            <p className="state-row">Array: [{step.array.join(", ")}]</p>
+          </>
+        ) : isQuick ? (
+          <>
+            <p className="state-row">Action: {step.type}</p>
+            <p className="state-row">
+              Working on: {step.lo >= 0 ? `positions ${step.lo} to ${step.hi}` : "-"}
+              {step.lo >= 0 && step.type !== "place" ? ` (pivot ${step.array[step.hi]})` : ""}
             </p>
             <p className="state-row">Array: [{step.array.join(", ")}]</p>
           </>

@@ -48,4 +48,11 @@ export const COMPLEXITY = {
     space: "O(1)",
     note: "The array must be sorted. Each check halves the search range.",
   },
+    QUICK: {
+    best: "O(n log n)",
+    average: "O(n log n)",
+    worst: "O(n²)",
+    space: "O(log n)",
+    note: "Worst case happens when the pivot is always the smallest or largest value (for example an already sorted array with a last-element pivot). In place but not stable.",
+  },
 };
