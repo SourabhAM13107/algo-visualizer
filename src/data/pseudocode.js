@@ -100,5 +100,27 @@ export const PSEUDOCODE = {
       done: [5],
     },
   },
+
+    DIJKSTRA: {
+    lines: [
+      "dijkstra(graph, source):",
+      "  dist[all] = infinity; dist[source] = 0",
+      "  while an unfinished node with a finite dist exists:",
+      "    u = unfinished node with the smallest dist",
+      "    mark u as finished",
+      "    for each unfinished neighbor v of u:",
+      "      candidate = dist[u] + weight(u, v)",
+      "      if candidate < dist[v]:",
+      "        dist[v] = candidate; prev[v] = u",
+      "  return dist",
+    ],
+    highlight: {
+      start: [1],
+      visit: [2, 3, 4],
+      update: [5, 6, 7, 8],
+      skip: [5, 6, 7],
+      done: [9],
+    },
+  },
 };
 

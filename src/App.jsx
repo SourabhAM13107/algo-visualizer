@@ -5,12 +5,15 @@ import { recordBubbleSort } from "./algorithms/bubbleSort";
 import { recordInsertionSort } from "./algorithms/insertionSort";
 import { recordBinarySearch } from "./algorithms/binarySearch";
 import { recordMergeSort } from "./algorithms/mergeSort";
+import { recordDijkstra } from "./algorithms/dijkstra";
 import GraphCanvas from "./components/GraphCanvas";
+import WeightedGraphCanvas from "./components/WeightedGraphCanvas";
 import ArrayBars from "./components/ArrayBars";
 import SearchBars from "./components/SearchBars";
 import MergeBars from "./components/MergeBars";
 import Pseudocode from "./components/Pseudocode";
 import { sampleGraph } from "./data/sampleGraphs";
+import { weightedGraph } from "./data/weightedGraph";
 import { usePlayer } from "./hooks/usePlayer";
 import "./App.css";
 
@@ -28,6 +31,11 @@ const ALGORITHMS = {
     kind: "graph",
     structure: "Stack",
     run: () => recordDFS(sampleGraph.adj, 0),
+  },
+  DIJKSTRA: {
+    label: "Dijkstra (Shortest Path)",
+    kind: "wgraph",
+    run: () => recordDijkstra(weightedGraph, 0),
   },
   BUBBLE: {
     label: "Bubble Sort",
@@ -58,6 +66,12 @@ const LEGENDS = {
     ["#fb923c", "Processing now"],
     ["#4ade80", "Done"],
   ],
+  wgraph: [
+    ["#cbd5e1", "Distance unknown (∞)"],
+    ["#fde047", "Has a tentative distance"],
+    ["#fb923c", "Processing now"],
+    ["#4ade80", "Distance is final"],
+  ],
   array: [
     ["#cbd5e1", "Unsorted"],
     ["#fde047", "Comparing"],
@@ -80,6 +94,8 @@ const LEGENDS = {
     ["#4ade80", "Sorted block"],
   ],
 };
+
+const fmt = (d) => (d === Infinity ? "∞" : d);
 
 function explainSearch(answer) {
   if (answer === "found") return "The middle value equals the target, so the search ends. ";
@@ -107,7 +123,8 @@ export default function App() {
   const isArray = kind === "array";
   const isSearch = kind === "search";
   const isMerge = kind === "merge";
-  const hasInput = kind !== "graph";
+  const isWeighted = kind === "wgraph";
+  const hasInput = isArray || isSearch || isMerge;
   const steps = useMemo(() => config.run(customArray, target), [algo, customArray, target]);
 
   const [speed, setSpeed] = useState(5);
@@ -131,7 +148,7 @@ export default function App() {
   if (mode === "predict" && !feedback) {
     if (isSearch) question = step.type === "check";
     else if (isArray || isMerge) question = step.type === "compare";
-    else question = nextVisitIndex !== -1;
+    else question = nextVisitIndex !== -1; // BFS, DFS, Dijkstra
   }
 
   function record(ok, answer) {
@@ -190,7 +207,6 @@ export default function App() {
     resetQuiz();
     if (isArray || isSearch) next(); // these start with a "start" step followed by the first question
     if (isMerge) {
-      // jump to the first comparison
       const first = steps.findIndex((s) => s.type === "compare");
       for (let k = 0; k < first; k++) next();
     }
@@ -297,6 +313,12 @@ export default function App() {
           <MergeBars step={step} />
         ) : isArray ? (
           <ArrayBars step={step} />
+        ) : isWeighted ? (
+          <WeightedGraphCanvas
+            graph={weightedGraph}
+            step={step}
+            onNodeClick={mode === "predict" ? handleNodeGuess : undefined}
+          />
         ) : (
           <GraphCanvas
             graph={sampleGraph}
@@ -341,6 +363,12 @@ export default function App() {
 
           {question && kind === "graph" && (
             <p className="quiz-question">Click the node {algo} will process next.</p>
+          )}
+
+          {question && isWeighted && (
+            <p className="quiz-question">
+              Click the unfinished node with the smallest distance. Dijkstra picks it next.
+            </p>
           )}
 
           {question && isArray && (
@@ -392,6 +420,8 @@ export default function App() {
                 ? feedback.answer
                   ? "They get swapped because the left bar is bigger. "
                   : "They stay, because they are already in order. "
+                : isWeighted
+                ? `Dijkstra always picks the unfinished node with the smallest distance: node ${feedback.answer}. `
                 : !feedback.ok && `The answer was node ${feedback.answer}. `}
               <button onClick={continueAfterFeedback}>Continue</button>
             </div>
@@ -409,7 +439,21 @@ export default function App() {
 
       <div className="card">
         <h3>Current state</h3>
-        {isSearch ? (
+        {isWeighted ? (
+          <>
+            <p className="state-row">Action: {step.type}</p>
+            <p className="state-row">Distances: [{step.dist.map(fmt).join(", ")}]</p>
+            <p className="state-row">
+              Finished nodes: [{step.done.map((d, i) => (d ? i : null)).filter((x) => x !== null).join(", ")}]
+            </p>
+            {step.to >= 0 && (
+              <p className="state-row">
+                Edge {step.from} to {step.to} (weight {step.weight}): candidate = {step.candidate}
+                {step.type === "update" ? " (better, so updated)" : " (not better, so skipped)"}
+              </p>
+            )}
+          </>
+        ) : isSearch ? (
           <>
             <p className="state-row">Action: {step.type}</p>
             <p className="state-row">Target: {step.target}</p>
