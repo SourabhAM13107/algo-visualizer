@@ -1,18 +1,38 @@
 import { useMemo, useState } from "react";
 import { recordBFS } from "./algorithms/bfs";
 import { recordDFS } from "./algorithms/dfs";
+import { recordBubbleSort } from "./algorithms/bubbleSort";
 import GraphCanvas from "./components/GraphCanvas";
+import ArrayBars from "./components/ArrayBars";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
 
+const sampleArray = [5, 2, 8, 1, 9, 3];
+
 const ALGORITHMS = {
-  BFS: { label: "BFS (Breadth-First Search)", record: recordBFS, structure: "Queue" },
-  DFS: { label: "DFS (Depth-First Search)", record: recordDFS, structure: "Stack" },
+  BFS: {
+    label: "BFS (Breadth-First Search)",
+    kind: "graph",
+    structure: "Queue",
+    run: () => recordBFS(sampleGraph.adj, 0),
+  },
+  DFS: {
+    label: "DFS (Depth-First Search)",
+    kind: "graph",
+    structure: "Stack",
+    run: () => recordDFS(sampleGraph.adj, 0),
+  },
+  BUBBLE: {
+    label: "Bubble Sort",
+    kind: "array",
+    run: () => recordBubbleSort(sampleArray),
+  },
 };
 
 export default function App() {
   const [algo, setAlgo] = useState("BFS");
-  const steps = useMemo(() => ALGORITHMS[algo].record(sampleGraph.adj, 0), [algo]);
+  const config = ALGORITHMS[algo];
+  const steps = useMemo(() => config.run(), [algo]);
 
   const [speed, setSpeed] = useState(5);
   const delay = 1700 - speed * 150;
@@ -52,6 +72,7 @@ export default function App() {
   function changeAlgo(value) {
     setAlgo(value);
     resetQuiz();
+    if (ALGORITHMS[value].kind === "array") setMode("watch"); // quiz for sorting comes later
   }
 
   function startPredict() {
@@ -75,14 +96,24 @@ export default function App() {
           ))}
         </select>
         <button onClick={startWatch} disabled={mode === "watch"}>Watch</button>
-        <button onClick={startPredict} disabled={mode === "predict"}>Predict the Next Step</button>
+        <button
+          onClick={startPredict}
+          disabled={mode === "predict" || config.kind === "array"}
+          title={config.kind === "array" ? "Coming soon for sorting" : ""}
+        >
+          Predict the Next Step
+        </button>
       </div>
 
-      <GraphCanvas
-        graph={sampleGraph}
-        step={step}
-        onNodeClick={mode === "predict" ? handleGuess : undefined}
-      />
+      {config.kind === "graph" ? (
+        <GraphCanvas
+          graph={sampleGraph}
+          step={step}
+          onNodeClick={mode === "predict" ? handleGuess : undefined}
+        />
+      ) : (
+        <ArrayBars step={step} />
+      )}
 
       {mode === "watch" && (
         <div style={{ margin: "12px 0", display: "flex", gap: 8, alignItems: "center" }}>
@@ -118,8 +149,17 @@ export default function App() {
         </div>
       )}
 
-      <p><b>{ALGORITHMS[algo].structure}:</b> [{step.queue.join(", ")}]</p>
-      <p><b>Visited:</b> [{step.visited.join(", ")}]</p>
+      {config.kind === "graph" ? (
+        <>
+          <p><b>{config.structure}:</b> [{step.queue.join(", ")}]</p>
+          <p><b>Visited:</b> [{step.visited.join(", ")}]</p>
+        </>
+      ) : (
+        <>
+          <p><b>Action:</b> {step.type}{step.i >= 0 ? ` (positions ${step.i} and ${step.j})` : ""}</p>
+          <p><b>Array:</b> [{step.array.join(", ")}]</p>
+        </>
+      )}
     </div>
   );
 }
