@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { recordBFS } from "./algorithms/bfs";
 import { recordDFS } from "./algorithms/dfs";
 import { recordBubbleSort } from "./algorithms/bubbleSort";
+import { recordInsertionSort } from "./algorithms/insertionSort";
 import GraphCanvas from "./components/GraphCanvas";
 import ArrayBars from "./components/ArrayBars";
 import Pseudocode from "./components/Pseudocode";
@@ -28,6 +29,11 @@ const ALGORITHMS = {
     label: "Bubble Sort",
     kind: "array",
     run: (arr) => recordBubbleSort(arr),
+  },
+    INSERTION: {
+    label: "Insertion Sort",
+    kind: "array",
+    run: (arr) => recordInsertionSort(arr),
   },
 };
 

@@ -39,4 +39,18 @@ export const PSEUDOCODE = {
     ],
     highlight: { start: [0], compare: [2, 3, 4], swap: [5], done: [7] },
   },
+
+    INSERTION: {
+    lines: [
+      "insertionSort(arr):",
+      "  for k = 1 to n - 1:",
+      "    for j = k down to 1:",
+      "      compare arr[j - 1] and arr[j]",
+      "      if arr[j - 1] > arr[j]:",
+      "        swap arr[j - 1], arr[j]",
+      "      else: break   // element is in place",
+      "  done: array is sorted",
+    ],
+    highlight: { start: [0], compare: [2, 3, 4], swap: [5], done: [7] },
+  },
 };
