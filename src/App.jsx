@@ -12,6 +12,7 @@ import ArrayBars from "./components/ArrayBars";
 import SearchBars from "./components/SearchBars";
 import MergeBars from "./components/MergeBars";
 import Pseudocode from "./components/Pseudocode";
+import Complexity from "./components/Complexity";
 import { sampleGraph } from "./data/sampleGraphs";
 import { weightedGraph } from "./data/weightedGraph";
 import { usePlayer } from "./hooks/usePlayer";
@@ -436,6 +437,7 @@ export default function App() {
       )}
 
       <Pseudocode algo={algo} step={step} />
+      <Complexity algo={algo} />
 
       <div className="card">
         <h3>Current state</h3>

@@ -205,3 +205,28 @@ button.active {
   border-radius: 8px;
   width: 70px;
 }
+
+.complexity-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.complexity-table th,
+.complexity-table td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.complexity-table th {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+}
+
+.complexity-note {
+  margin: 12px 0 0;
+  color: #475569;
+  font-size: 14px;
+}

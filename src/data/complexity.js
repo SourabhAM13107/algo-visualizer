@@ -1,0 +1,51 @@
+export const COMPLEXITY = {
+  BFS: {
+    best: "O(V + E)",
+    average: "O(V + E)",
+    worst: "O(V + E)",
+    space: "O(V)",
+    note: "Visits every vertex and edge once. The queue and visited set take O(V) extra space.",
+  },
+  DFS: {
+    best: "O(V + E)",
+    average: "O(V + E)",
+    worst: "O(V + E)",
+    space: "O(V)",
+    note: "Same cost as BFS. The stack can grow up to O(V) on a long path.",
+  },
+  DIJKSTRA: {
+    best: "O(V²)",
+    average: "O(V²)",
+    worst: "O(V²)",
+    space: "O(V)",
+    note: "This version scans all nodes to find the minimum, so it is O(V²). With a binary heap it becomes O((V + E) log V). Needs non-negative weights.",
+  },
+  BUBBLE: {
+    best: "O(n)*",
+    average: "O(n²)",
+    worst: "O(n²)",
+    space: "O(1)",
+    note: "*O(n) only if you add an early-exit check when a pass makes no swap. This visualizer always does every pass. Stable and in-place.",
+  },
+  INSERTION: {
+    best: "O(n)",
+    average: "O(n²)",
+    worst: "O(n²)",
+    space: "O(1)",
+    note: "Fast on nearly sorted data. Stable and in-place.",
+  },
+  MERGE: {
+    best: "O(n log n)",
+    average: "O(n log n)",
+    worst: "O(n log n)",
+    space: "O(n)",
+    note: "Always splits in half (log n levels) and merges in O(n) per level. Stable, but needs an extra array.",
+  },
+  BINARY: {
+    best: "O(1)",
+    average: "O(log n)",
+    worst: "O(log n)",
+    space: "O(1)",
+    note: "The array must be sorted. Each check halves the search range.",
+  },
+};
