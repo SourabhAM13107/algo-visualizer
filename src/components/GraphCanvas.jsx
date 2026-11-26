@@ -19,7 +19,7 @@ function colorOf(id, step) {
   return COLORS.idle;
 }
 
-export default function GraphCanvas({ graph, step, width = 620, height = 220 }) {
+export default function GraphCanvas({ graph, step, onNodeClick, width = 620, height = 220 }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -72,5 +72,28 @@ export default function GraphCanvas({ graph, step, width = 620, height = 220 }) 
     }
   }, [graph, step, width, height]);
 
-  return <canvas ref={canvasRef} width={width} height={height} />;
+    function handleClick(e) {
+    if (!onNodeClick) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    for (const n of graph.nodes) {
+      if (Math.hypot(n.x - x, n.y - y) <= 22) {
+        onNodeClick(n.id);
+        return;
+      }
+    }
+  }
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      onClick={handleClick}
+      style={{ cursor: onNodeClick ? "pointer" : "default" }}
+    />
+  );
+
+  // return <canvas ref={canvasRef} width={width} height={height} />;
 }
