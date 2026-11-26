@@ -53,4 +53,26 @@ export const PSEUDOCODE = {
     ],
     highlight: { start: [0], compare: [2, 3, 4], swap: [5], done: [7] },
   },
+
+    BINARY: {
+    lines: [
+      "binarySearch(arr, target):   // arr is sorted",
+      "  low = 0; high = n - 1",
+      "  while low <= high:",
+      "    mid = floor((low + high) / 2)",
+      "    if arr[mid] == target: return mid",
+      "    else if arr[mid] < target: low = mid + 1",
+      "    else: high = mid - 1",
+      "  return not found",
+    ],
+    highlight: {
+      start: [1],
+      check: [3, 4],
+      found: [4],
+      "go-right": [5],
+      "go-left": [6],
+      notfound: [7],
+    },
+  },
 };
+

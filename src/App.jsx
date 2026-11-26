@@ -3,8 +3,10 @@ import { recordBFS } from "./algorithms/bfs";
 import { recordDFS } from "./algorithms/dfs";
 import { recordBubbleSort } from "./algorithms/bubbleSort";
 import { recordInsertionSort } from "./algorithms/insertionSort";
+import { recordBinarySearch } from "./algorithms/binarySearch";
 import GraphCanvas from "./components/GraphCanvas";
 import ArrayBars from "./components/ArrayBars";
+import SearchBars from "./components/SearchBars";
 import Pseudocode from "./components/Pseudocode";
 import { sampleGraph } from "./data/sampleGraphs";
 import { usePlayer } from "./hooks/usePlayer";
@@ -30,10 +32,15 @@ const ALGORITHMS = {
     kind: "array",
     run: (arr) => recordBubbleSort(arr),
   },
-    INSERTION: {
+  INSERTION: {
     label: "Insertion Sort",
     kind: "array",
     run: (arr) => recordInsertionSort(arr),
+  },
+  BINARY: {
+    label: "Binary Search",
+    kind: "search",
+    run: (arr, target) => recordBinarySearch(arr, target),
   },
 };
 
@@ -50,17 +57,35 @@ const LEGENDS = {
     ["#fb923c", "Swapped"],
     ["#4ade80", "In final place"],
   ],
+  search: [
+    ["#e2e8f0", "Eliminated"],
+    ["#cbd5e1", "Still possible"],
+    ["#fde047", "Checking the middle"],
+    ["#fb923c", "Middle was not the target"],
+    ["#4ade80", "Found"],
+  ],
 };
+
+function explainSearch(answer) {
+  if (answer === "found") return "The middle value equals the target, so the search ends. ";
+  if (answer === "go-right")
+    return "The middle value is smaller than the target, so the target must be in the right half. ";
+  return "The middle value is bigger than the target, so the target must be in the left half. ";
+}
 
 export default function App() {
   const [algo, setAlgo] = useState("BFS");
   const [customArray, setCustomArray] = useState(sampleArray);
   const [inputText, setInputText] = useState(sampleArray.join(", "));
   const [inputError, setInputError] = useState("");
+  const [target, setTarget] = useState(9);
+  const [targetText, setTargetText] = useState("9");
 
   const config = ALGORITHMS[algo];
   const isArray = config.kind === "array";
-  const steps = useMemo(() => config.run(customArray), [algo, customArray]);
+  const isSearch = config.kind === "search";
+  const hasInput = isArray || isSearch;
+  const steps = useMemo(() => config.run(customArray, target), [algo, customArray, target]);
 
   const [speed, setSpeed] = useState(5);
   const delay = 1700 - speed * 150;
@@ -75,11 +100,16 @@ export default function App() {
   const nextCompareIndex = steps.findIndex(
     (s, i) => i > index && (s.type === "compare" || s.type === "done")
   );
+  const nextCheckIndex = steps.findIndex(
+    (s, i) => i > index && (s.type === "check" || s.type === "found" || s.type === "notfound")
+  );
 
-  const question =
-    mode === "predict" &&
-    !feedback &&
-    (isArray ? step.type === "compare" : nextVisitIndex !== -1);
+  let question = false;
+  if (mode === "predict" && !feedback) {
+    if (isSearch) question = step.type === "check";
+    else if (isArray) question = step.type === "compare";
+    else question = nextVisitIndex !== -1;
+  }
 
   function record(ok, answer) {
     setScore((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
@@ -98,13 +128,21 @@ export default function App() {
     record(guessSwap === willSwap, willSwap);
   }
 
+  function handleSearchGuess(guess) {
+    if (!question) return;
+    const answer = steps[index + 1].type; // "found", "go-left" or "go-right"
+    record(guess === answer, answer);
+  }
+
   function jumpTo(target) {
     for (let k = index; k < target; k++) next();
   }
 
   function continueAfterFeedback() {
     setFeedback(null);
-    jumpTo(isArray ? nextCompareIndex : nextVisitIndex);
+    if (isSearch) jumpTo(nextCheckIndex);
+    else if (isArray) jumpTo(nextCompareIndex);
+    else jumpTo(nextVisitIndex);
   }
 
   function resetQuiz() {
@@ -121,7 +159,7 @@ export default function App() {
 
   function startPredict() {
     resetQuiz();
-    if (isArray) next();
+    if (hasInput) next(); // move from the "start" step to the first question
     setMode("predict");
   }
 
@@ -130,30 +168,45 @@ export default function App() {
     setMode("watch");
   }
 
-  function loadArray(nums) {
+  function loadInputs(nums, t) {
     setCustomArray(nums);
     setInputText(nums.join(", "));
+    setTarget(t);
+    setTargetText(String(t));
     setInputError("");
     resetQuiz();
     setMode("watch");
   }
 
-  function applyArray() {
-    const parts = inputText.split(",").map((t) => t.trim()).filter((t) => t !== "");
+  function applyInputs() {
+    const parts = inputText.split(",").map((x) => x.trim()).filter((x) => x !== "");
     const nums = parts.map(Number);
-    const bad =
+    const badArray =
       nums.length < 2 ||
       nums.length > 12 ||
       nums.some((n) => !Number.isInteger(n) || n < 1 || n > 99);
-    if (bad) {
+    if (badArray) {
       setInputError("Enter 2 to 12 whole numbers between 1 and 99, separated by commas.");
       return;
     }
-    loadArray(nums);
+    let t = target;
+    if (isSearch) {
+      t = Number(targetText);
+      if (targetText.trim() === "" || !Number.isInteger(t) || t < 1 || t > 99) {
+        setInputError("Target must be a whole number between 1 and 99.");
+        return;
+      }
+    }
+    loadInputs(nums, t);
   }
 
-  function randomArray() {
-    loadArray(Array.from({ length: 8 }, () => 1 + Math.floor(Math.random() * 30)));
+  function randomInputs() {
+    const nums = Array.from({ length: 8 }, () => 1 + Math.floor(Math.random() * 30));
+    const t =
+      Math.random() < 0.5
+        ? nums[Math.floor(Math.random() * nums.length)]
+        : 1 + Math.floor(Math.random() * 30);
+    loadInputs(nums, t);
   }
 
   return (
@@ -177,23 +230,36 @@ export default function App() {
         </button>
       </div>
 
-      {isArray && (
+      {hasInput && (
         <div className="toolbar">
           <input
             className="array-input"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyArray()}
+            onKeyDown={(e) => e.key === "Enter" && applyInputs()}
             placeholder="e.g. 5, 2, 8, 1, 9"
           />
-          <button onClick={applyArray}>Apply array</button>
-          <button onClick={randomArray}>Random</button>
+          {isSearch && (
+            <label className="target-label">
+              Target
+              <input
+                className="target-input"
+                value={targetText}
+                onChange={(e) => setTargetText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyInputs()}
+              />
+            </label>
+          )}
+          <button onClick={applyInputs}>Apply</button>
+          <button onClick={randomInputs}>Random</button>
           {inputError && <span className="input-error">{inputError}</span>}
         </div>
       )}
 
       <div className="card">
-        {isArray ? (
+        {isSearch ? (
+          <SearchBars step={step} />
+        ) : isArray ? (
           <ArrayBars step={step} />
         ) : (
           <GraphCanvas
@@ -237,7 +303,7 @@ export default function App() {
         <div className="card">
           <h3>Quiz</h3>
 
-          {question && !isArray && (
+          {question && !isArray && !isSearch && (
             <p className="quiz-question">Click the node {algo} will process next.</p>
           )}
 
@@ -253,10 +319,25 @@ export default function App() {
             </>
           )}
 
+          {question && isSearch && (
+            <>
+              <p className="quiz-question">
+                The middle value is {step.array[step.mid]} and the target is {step.target}. What happens next?
+              </p>
+              <div className="quiz-actions">
+                <button onClick={() => handleSearchGuess("go-left")}>Go left</button>
+                <button className="primary" onClick={() => handleSearchGuess("found")}>Found it</button>
+                <button onClick={() => handleSearchGuess("go-right")}>Go right</button>
+              </div>
+            </>
+          )}
+
           {feedback && (
             <div className={`feedback ${feedback.ok ? "ok" : "bad"}`}>
               {feedback.ok ? "Correct! " : "Not quite. "}
-              {isArray
+              {isSearch
+                ? explainSearch(feedback.answer)
+                : isArray
                 ? feedback.answer
                   ? "They get swapped because the left bar is bigger. "
                   : "They stay, because they are already in order. "
@@ -277,7 +358,20 @@ export default function App() {
 
       <div className="card">
         <h3>Current state</h3>
-        {isArray ? (
+        {isSearch ? (
+          <>
+            <p className="state-row">Action: {step.type}</p>
+            <p className="state-row">Target: {step.target}</p>
+            <p className="state-row">
+              Search range:{" "}
+              {step.low <= step.high ? `positions ${step.low} to ${step.high}` : "empty"}
+            </p>
+            <p className="state-row">
+              Middle: {step.mid >= 0 ? `position ${step.mid} (value ${step.array[step.mid]})` : "-"}
+            </p>
+            <p className="state-row">Sorted array: [{step.array.join(", ")}]</p>
+          </>
+        ) : isArray ? (
           <>
             <p className="state-row">
               Action: {step.type}
