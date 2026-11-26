@@ -32,6 +32,7 @@ const ALGORITHMS = {
 export default function App() {
   const [algo, setAlgo] = useState("BFS");
   const config = ALGORITHMS[algo];
+  const isArray = config.kind === "array";
   const steps = useMemo(() => config.run(), [algo]);
 
   const [speed, setSpeed] = useState(5);
@@ -43,15 +44,33 @@ export default function App() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [feedback, setFeedback] = useState(null);
 
+  // graph quiz: the next node that will be processed
   const nextVisitIndex = steps.findIndex((s, i) => i > index && s.type === "visit");
-  const question = mode === "predict" && nextVisitIndex !== -1 && !feedback;
+  // sorting quiz: the next comparison (or the end)
+  const nextCompareIndex = steps.findIndex(
+    (s, i) => i > index && (s.type === "compare" || s.type === "done")
+  );
 
-  function handleGuess(id) {
-    if (!question) return;
-    const answer = steps[nextVisitIndex].node;
-    const ok = id === answer;
+  const question =
+    mode === "predict" &&
+    !feedback &&
+    (isArray ? step.type === "compare" : nextVisitIndex !== -1);
+
+  function record(ok, answer) {
     setScore((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     setFeedback({ ok, answer });
+  }
+
+  function handleNodeGuess(id) {
+    if (!question) return;
+    const answer = steps[nextVisitIndex].node;
+    record(id === answer, answer);
+  }
+
+  function handleSortGuess(guessSwap) {
+    if (!question) return;
+    const willSwap = steps[index + 1].type === "swap";
+    record(guessSwap === willSwap, willSwap);
   }
 
   function jumpTo(target) {
@@ -60,7 +79,7 @@ export default function App() {
 
   function continueAfterFeedback() {
     setFeedback(null);
-    jumpTo(nextVisitIndex);
+    jumpTo(isArray ? nextCompareIndex : nextVisitIndex);
   }
 
   function resetQuiz() {
@@ -72,11 +91,12 @@ export default function App() {
   function changeAlgo(value) {
     setAlgo(value);
     resetQuiz();
-    if (ALGORITHMS[value].kind === "array") setMode("watch"); // quiz for sorting comes later
+    setMode("watch");
   }
 
   function startPredict() {
     resetQuiz();
+    if (isArray) next(); // move from the "start" step to the first comparison
     setMode("predict");
   }
 
@@ -96,23 +116,17 @@ export default function App() {
           ))}
         </select>
         <button onClick={startWatch} disabled={mode === "watch"}>Watch</button>
-        <button
-          onClick={startPredict}
-          disabled={mode === "predict" || config.kind === "array"}
-          title={config.kind === "array" ? "Coming soon for sorting" : ""}
-        >
-          Predict the Next Step
-        </button>
+        <button onClick={startPredict} disabled={mode === "predict"}>Predict the Next Step</button>
       </div>
 
-      {config.kind === "graph" ? (
+      {isArray ? (
+        <ArrayBars step={step} />
+      ) : (
         <GraphCanvas
           graph={sampleGraph}
           step={step}
-          onNodeClick={mode === "predict" ? handleGuess : undefined}
+          onNodeClick={mode === "predict" ? handleNodeGuess : undefined}
         />
-      ) : (
-        <ArrayBars step={step} />
       )}
 
       {mode === "watch" && (
@@ -132,11 +146,24 @@ export default function App() {
 
       {mode === "predict" && (
         <div style={{ margin: "12px 0" }}>
-          {question && <p><b>Click the node {algo} will process next.</b></p>}
+          {question && !isArray && <p><b>Click the node {algo} will process next.</b></p>}
+
+          {question && isArray && (
+            <p>
+              <b>Bars at positions {step.i} and {step.j} are being compared. Will they be swapped?</b>{" "}
+              <button onClick={() => handleSortGuess(true)}>Swap</button>{" "}
+              <button onClick={() => handleSortGuess(false)}>Don't swap</button>
+            </p>
+          )}
 
           {feedback && (
             <p style={{ color: feedback.ok ? "green" : "crimson" }}>
-              {feedback.ok ? "Correct!" : `Not quite. The answer was node ${feedback.answer}.`}{" "}
+              {feedback.ok ? "Correct!" : "Not quite."}{" "}
+              {isArray
+                ? feedback.answer
+                  ? "They get swapped because the left bar is bigger."
+                  : "They stay, because they are already in order."
+                : !feedback.ok && `The answer was node ${feedback.answer}.`}{" "}
               <button onClick={continueAfterFeedback}>Continue</button>
             </p>
           )}
@@ -149,15 +176,15 @@ export default function App() {
         </div>
       )}
 
-      {config.kind === "graph" ? (
-        <>
-          <p><b>{config.structure}:</b> [{step.queue.join(", ")}]</p>
-          <p><b>Visited:</b> [{step.visited.join(", ")}]</p>
-        </>
-      ) : (
+      {isArray ? (
         <>
           <p><b>Action:</b> {step.type}{step.i >= 0 ? ` (positions ${step.i} and ${step.j})` : ""}</p>
           <p><b>Array:</b> [{step.array.join(", ")}]</p>
+        </>
+      ) : (
+        <>
+          <p><b>{config.structure}:</b> [{step.queue.join(", ")}]</p>
+          <p><b>Visited:</b> [{step.visited.join(", ")}]</p>
         </>
       )}
     </div>
