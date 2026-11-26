@@ -416,3 +416,170 @@ button.active {
     font-size: 13px;
   }
 }
+
+/* ---------- top navigation ---------- */
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.topnav-inner {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand {
+  margin-right: auto;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.badge {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- promo banner ---------- */
+
+.promo-wrap {
+  padding-bottom: 0;
+}
+
+.promo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.promo b {
+  font-size: 18px;
+}
+
+.promo p {
+  margin: 2px 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.promo button {
+  margin-left: auto;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #4338ca;
+}
+
+.promo button:hover:not(:disabled) {
+  background: #eef2ff;
+}
+
+/* ---------- race ---------- */
+
+.race-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.lane {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lane.winner {
+  border-color: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+}
+
+.lane .bars {
+  max-width: none;
+  margin-top: 12px;
+}
+
+.lane .bars-row {
+  height: 190px !important;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.stats b {
+  margin-left: 6px;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--text);
+}
+
+.lane-done {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
+}
+
+.race-banner {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid #c7d2fe;
+  background: linear-gradient(90deg, #eef2ff, #dcfce7);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.bars.compact .bars-row {
+  gap: 3px;
+  padding: 10px 8px 0;
+}
+
+.bars.compact .bar {
+  padding-top: 0;
+  border-radius: 6px 6px 2px 2px;
+  box-shadow: inset 0 -3px 0 rgba(15, 23, 42, 0.08);
+}
+
+.bars.compact .bars-marks {
+  gap: 3px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .race-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand {
+    display: none;
+  }
+}

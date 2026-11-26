@@ -1,8 +1,9 @@
 export default function BarRow({ values, colors, marks, height = 240 }) {
   const max = Math.max(...values);
+  const compact = values.length > 14;
 
   return (
-    <div className="bars">
+    <div className={compact ? "bars compact" : "bars"}>
       <div className="bars-row" style={{ height }}>
         {values.map((value, i) => (
           <div key={i} className="bar-col">
@@ -13,17 +14,19 @@ export default function BarRow({ values, colors, marks, height = 240 }) {
                 background: colors[i],
               }}
             >
-              {value}
+              {compact ? "" : value}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bars-index">
-        {values.map((_, i) => (
-          <div key={i}>{i}</div>
-        ))}
-      </div>
+      {!compact && (
+        <div className="bars-index">
+          {values.map((_, i) => (
+            <div key={i}>{i}</div>
+          ))}
+        </div>
+      )}
 
       {marks && (
         <div className="bars-marks">
