@@ -26,7 +26,7 @@ function barColor(index, step) {
 export default function MergeBars({ step, height = 220 }) {
   const max = Math.max(...step.array);
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height, width: 620 }}>
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height, width: "100%", maxWidth: 620 }}>
       {step.array.map((value, index) => (
         <div
           key={index}

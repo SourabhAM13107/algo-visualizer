@@ -230,3 +230,27 @@ button.active {
   color: #475569;
   font-size: 14px;
 }
+
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 12px 40px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+  }
+
+  .array-input {
+    width: 100%;
+  }
+
+  .step-count {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .legend {
+    gap: 8px 12px;
+    font-size: 13px;
+  }
+}

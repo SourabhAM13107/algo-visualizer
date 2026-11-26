@@ -102,8 +102,8 @@ export default function WeightedGraphCanvas({ graph, step, onNodeClick, width = 
   function handleClick(e) {
     if (!onNodeClick) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX - rect.left) * (canvasRef.current.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvasRef.current.height / rect.height);
     for (const n of graph.nodes) {
       if (Math.hypot(n.x - x, n.y - y) <= 22) {
         onNodeClick(n.id);
@@ -118,7 +118,7 @@ export default function WeightedGraphCanvas({ graph, step, onNodeClick, width = 
       width={width}
       height={height}
       onClick={handleClick}
-      style={{ cursor: onNodeClick ? "pointer" : "default" }}
+      style={{ cursor: onNodeClick ? "pointer" : "default", maxWidth: "100%", height: "auto" }}
     />
   );
 }

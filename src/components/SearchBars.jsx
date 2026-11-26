@@ -29,7 +29,7 @@ function marks(index, step) {
 export default function SearchBars({ step, height = 220 }) {
   const max = Math.max(...step.array);
   return (
-    <div style={{ width: 620 }}>
+    <div style={{ width: "100%", maxWidth: 620 }}>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height }}>
         {step.array.map((value, index) => (
           <div
