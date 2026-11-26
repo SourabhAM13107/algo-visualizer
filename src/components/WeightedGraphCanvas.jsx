@@ -1,43 +1,54 @@
 import { useEffect, useRef } from "react";
 
-const COLORS = {
-  idle: "#cbd5e1",      // distance still unknown (infinity)
-  tentative: "#fde047", // has a distance, not finished
-  current: "#fb923c",   // being processed now
-  done: "#4ade80",      // distance is final
-};
+const FILL = { idle: "#cbd5e1", tentative: "#fde047", current: "#fb923c", done: "#4ade80" };
+const RING = { idle: "#94a3b8", tentative: "#ca8a04", current: "#c2410c", done: "#15803d" };
+const FONT = '"Inter", system-ui, -apple-system, sans-serif';
+const R = 22;
 
-function colorOf(id, step) {
-  if (id === step.current) return COLORS.current;
-  if (step.done[id]) return COLORS.done;
-  if (step.dist[id] !== Infinity) return COLORS.tentative;
-  return COLORS.idle;
+function stateOf(id, step) {
+  if (id === step.current) return "current";
+  if (step.done[id]) return "done";
+  if (step.dist[id] !== Infinity) return "tentative";
+  return "idle";
 }
 
-function drawLabel(ctx, text, x, y, size = 14) {
-  ctx.font = `bold ${size}px sans-serif`;
+function pill(ctx, text, x, y, { bg = "#ffffff", fg = "#0f172a", border = "#cbd5e1", size = 13 } = {}) {
+  ctx.font = `600 ${size}px ${FONT}`;
+  const w = ctx.measureText(text).width + 14;
+  const h = size + 8;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2);
+  else ctx.rect(x - w / 2, y - h / 2, w, h);
+  ctx.fillStyle = bg;
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = border;
+  ctx.stroke();
+  ctx.fillStyle = fg;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = "#ffffff";
-  ctx.strokeText(text, x, y);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillText(text, x, y);
+  ctx.fillText(text, x, y + 0.5);
 }
 
 export default function WeightedGraphCanvas({ graph, step, onNodeClick, width = 620, height = 220 }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const ctx = canvasRef.current.getContext("2d");
-    ctx.clearRect(0, 0, width, height);
+    const canvas = canvasRef.current;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
 
-    // 1. edges
-    for (const [a, b, w] of graph.edges) {
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.lineCap = "round";
+
+    // edges
+    for (const [a, b] of graph.edges) {
       const p = graph.nodes[a];
       const q = graph.nodes[b];
-      const inTree =
-        (step.prev[b] === a && step.done[b]) || (step.prev[a] === b && step.done[a]);
+      const inTree = (step.prev[b] === a && step.done[b]) || (step.prev[a] === b && step.done[a]);
       const examined =
         step.to >= 0 &&
         ((a === step.from && b === step.to) || (a === step.to && b === step.from));
@@ -46,66 +57,88 @@ export default function WeightedGraphCanvas({ graph, step, onNodeClick, width = 
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(q.x, q.y);
       if (examined) {
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4.5;
         ctx.strokeStyle = "#ef4444";
       } else if (inTree) {
         ctx.lineWidth = 5;
         ctx.strokeStyle = "#16a34a";
       } else {
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.strokeStyle = "#94a3b8";
       }
       ctx.stroke();
     }
 
-    // 2. weight labels
+    // weight labels
     for (const [a, b, w] of graph.edges) {
       const p = graph.nodes[a];
       const q = graph.nodes[b];
-      drawLabel(ctx, String(w), (p.x + q.x) / 2, (p.y + q.y) / 2, 14);
+      pill(ctx, String(w), (p.x + q.x) / 2, (p.y + q.y) / 2, { size: 13 });
     }
 
-    // 3. nodes
+    // nodes
     for (const n of graph.nodes) {
+      const s = stateOf(n.id, step);
+
+      if (s === "current") {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, R + 9, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(251, 146, 60, 0.25)";
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.shadowColor = "rgba(15, 23, 42, 0.28)";
+      ctx.shadowBlur = 10 * dpr;
+      ctx.shadowOffsetY = 3 * dpr;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, 22, 0, Math.PI * 2);
-      ctx.fillStyle = colorOf(n.id, step);
+      ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+      ctx.fillStyle = FILL[s];
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "#1e293b";
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = RING[s];
       ctx.stroke();
 
       ctx.fillStyle = "#0f172a";
-      ctx.font = "bold 16px sans-serif";
+      ctx.font = `700 16px ${FONT}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(n.id, n.x, n.y);
+      ctx.fillText(String(n.id), n.x, n.y + 0.5);
     }
 
-    // 4. red ring around the node whose distance is being checked
+    // red ring on the node whose distance is being checked
     if (step.to >= 0) {
       const t = graph.nodes[step.to];
       ctx.beginPath();
-      ctx.arc(t.x, t.y, 28, 0, Math.PI * 2);
+      ctx.arc(t.x, t.y, R + 6, 0, Math.PI * 2);
       ctx.lineWidth = 3;
       ctx.strokeStyle = "#ef4444";
       ctx.stroke();
     }
 
-    // 5. distance under each node
+    // distance labels (above the top nodes, below the others)
     for (const n of graph.nodes) {
       const d = step.dist[n.id];
-      drawLabel(ctx, `d=${d === Infinity ? "∞" : d}`, n.x, n.y + 38, 13);
+      const above = n.y < 100;
+      pill(ctx, `d = ${d === Infinity ? "∞" : d}`, n.x, above ? n.y - 40 : n.y + 40, {
+        bg: step.done[n.id] ? "#dcfce7" : "#ffffff",
+        border: step.done[n.id] ? "#86efac" : "#cbd5e1",
+        size: 12,
+      });
     }
   }, [graph, step, width, height]);
 
   function handleClick(e) {
     if (!onNodeClick) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvasRef.current.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvasRef.current.height / rect.height);
+    const x = (e.clientX - rect.left) * (width / rect.width);
+    const y = (e.clientY - rect.top) * (height / rect.height);
     for (const n of graph.nodes) {
-      if (Math.hypot(n.x - x, n.y - y) <= 22) {
+      if (Math.hypot(n.x - x, n.y - y) <= R) {
         onNodeClick(n.id);
         return;
       }
@@ -115,10 +148,13 @@ export default function WeightedGraphCanvas({ graph, step, onNodeClick, width = 
   return (
     <canvas
       ref={canvasRef}
-      width={width}
-      height={height}
       onClick={handleClick}
-      style={{ cursor: onNodeClick ? "pointer" : "default", maxWidth: "100%", height: "auto" }}
+      style={{
+        width: "100%",
+        maxWidth: width,
+        height: "auto",
+        cursor: onNodeClick ? "pointer" : "default",
+      }}
     />
   );
 }

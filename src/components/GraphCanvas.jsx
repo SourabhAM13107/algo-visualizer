@@ -1,32 +1,34 @@
 import { useEffect, useRef } from "react";
 
-const COLORS = {
-  idle: "#cbd5e1",
-  queued: "#fde047",
-  current: "#fb923c",
-  done: "#4ade80",
-};
+const FILL = { idle: "#cbd5e1", queued: "#fde047", current: "#fb923c", done: "#4ade80" };
+const RING = { idle: "#94a3b8", queued: "#ca8a04", current: "#c2410c", done: "#15803d" };
+const FONT = '"Inter", system-ui, -apple-system, sans-serif';
+const R = 22;
 
-function currentNode(step) {
-  if (step.type === "enqueue") return step.from;
-  return step.node;
-}
-
-function colorOf(id, step) {
-  if (id === currentNode(step)) return COLORS.current;
-  if (step.queue.includes(id)) return COLORS.queued;
-  if (step.visited.includes(id)) return COLORS.done;
-  return COLORS.idle;
+function stateOf(id, step) {
+  const current = step.type === "enqueue" ? step.from : step.node;
+  if (id === current) return "current";
+  if (step.queue.includes(id)) return "queued";
+  if (step.visited.includes(id)) return "done";
+  return "idle";
 }
 
 export default function GraphCanvas({ graph, step, onNodeClick, width = 620, height = 220 }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const ctx = canvasRef.current.getContext("2d");
-    ctx.clearRect(0, 0, width, height);
+    const canvas = canvasRef.current;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
 
-    ctx.lineWidth = 2;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.lineCap = "round";
+
+    // edges
+    ctx.lineWidth = 2.5;
     ctx.strokeStyle = "#94a3b8";
     for (const [a, list] of Object.entries(graph.adj)) {
       for (const b of list) {
@@ -41,10 +43,11 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
       }
     }
 
+    // the edge used to discover a new node
     if (step.type === "enqueue") {
       const p = graph.nodes[step.from];
       const q = graph.nodes[step.node];
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 4.5;
       ctx.strokeStyle = "#ef4444";
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
@@ -52,30 +55,48 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
       ctx.stroke();
     }
 
+    // nodes
     for (const n of graph.nodes) {
+      const s = stateOf(n.id, step);
+
+      if (s === "current") {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, R + 9, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(251, 146, 60, 0.25)";
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.shadowColor = "rgba(15, 23, 42, 0.28)";
+      ctx.shadowBlur = 10 * dpr;
+      ctx.shadowOffsetY = 3 * dpr;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, 22, 0, Math.PI * 2);
-      ctx.fillStyle = colorOf(n.id, step);
+      ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+      ctx.fillStyle = FILL[s];
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "#1e293b";
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = RING[s];
       ctx.stroke();
 
       ctx.fillStyle = "#0f172a";
-      ctx.font = "bold 16px sans-serif";
+      ctx.font = `700 16px ${FONT}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(n.id, n.x, n.y);
+      ctx.fillText(String(n.id), n.x, n.y + 0.5);
     }
   }, [graph, step, width, height]);
 
   function handleClick(e) {
     if (!onNodeClick) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvasRef.current.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvasRef.current.height / rect.height);
+    const x = (e.clientX - rect.left) * (width / rect.width);
+    const y = (e.clientY - rect.top) * (height / rect.height);
     for (const n of graph.nodes) {
-      if (Math.hypot(n.x - x, n.y - y) <= 22) {
+      if (Math.hypot(n.x - x, n.y - y) <= R) {
         onNodeClick(n.id);
         return;
       }
@@ -85,10 +106,13 @@ export default function GraphCanvas({ graph, step, onNodeClick, width = 620, hei
   return (
     <canvas
       ref={canvasRef}
-      width={width}
-      height={height}
       onClick={handleClick}
-      style={{ cursor: onNodeClick ? "pointer" : "default", maxWidth: "100%", height: "auto" }}
+      style={{
+        width: "100%",
+        maxWidth: width,
+        height: "auto",
+        cursor: onNodeClick ? "pointer" : "default",
+      }}
     />
   );
 }

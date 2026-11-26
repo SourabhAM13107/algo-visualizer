@@ -4,7 +4,9 @@
 
 body {
   margin: 0;
-  background: #f1f5f9;
+  min-height: 100vh;
+  background: #f8fafc linear-gradient(180deg, #eef2ff 0, #f8fafc 360px) no-repeat;
   color: #0f172a;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
